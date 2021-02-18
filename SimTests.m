@@ -32,7 +32,7 @@ gaus = exp( -(times-peaktime).^2 / (2*width^2) );
 % trial-unique sine wave
 cosw = cos(2*pi*sinefreq*times);
         
-data = randn(1,3000) + 0.5*(cosw .* gaus);
+data = randn(1,3000) + 0.5*(cosw);% .* gaus
 
 %% Initialise loops
 

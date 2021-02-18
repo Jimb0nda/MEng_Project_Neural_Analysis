@@ -12,7 +12,7 @@ load mv_20.mat
 % 5 Acceleration signal
 
 % select channel no
-chan_no=2;  % Ext EEG
+chan_no=1;  % Ext EEG
 
 %% Setup Parameters
 srate = 1000;           % in Hz

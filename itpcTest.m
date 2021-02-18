@@ -31,6 +31,9 @@ dataX = fft( reshape(EEG.data(strcmpi(channel2use,{EEG.chanlocs.labels}),:,:),1,
 % initialize output time-frequency data
 itpc = zeros(num_freq,EEG.pnts);
 
+% initialize output time-frequency data
+tf = zeros(num_freq,EEG.pnts);
+
 for fi=1:num_freq
 
     % create wavelet and get its FFT
@@ -45,6 +48,9 @@ for fi=1:num_freq
     as = ifft(dataX.*kernel);
     as = as(half_wave+1:end-half_wave);
     as = reshape(as,EEG.pnts,EEG.trials);
+    
+    %Compute time frequency power
+    tf(fi,:) = mean(abs(as).^2,2);
 
     % compute ITPC
     itpc(fi,:) = abs(mean(exp(1i*angle(as)),2));
@@ -54,9 +60,17 @@ end
 
 %% Plotting 
 
-figure(1), clf
+figure(10), clf
+
+%Time Frequency Power Plot
+s1 = subplot(121);
+contourf(EEG.times,frex,tf,40,'linecolor','none')
+%conofinf('morl',dataR,length(data),data(1:1594),'plot');
+xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("Time Frequency Power Plot")
+colormap(s1,jet);
 
 % ITPC Plot
+s2 = subplot(122);
 contourf(EEG.times,frex,itpc,40,'linecolor','none')
 xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("ITPC")
-colormap(hot);
+colormap(s2,hot);
