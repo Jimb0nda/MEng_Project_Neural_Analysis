@@ -1,8 +1,6 @@
 %% Testing signal analysis techniques
 clear
 
-%testing Github
-
 % Load in signal data
 load mv_20.mat
 
@@ -53,7 +51,7 @@ for trial_no = 1:length(st1)
     nData = length(dataR);
     nKern = length(wavelt);
     nConv = nData + nKern - 1;
-    halfK = floor(nKern/2);
+    half_wave = floor(nKern/2);
 
     % FFT for data
     dataX = fft(dataR, nConv);
@@ -71,9 +69,8 @@ for trial_no = 1:length(st1)
         
         % Convolve
         as = ifft(dataX.*kernel);
-        as = as(halfK+1:end-halfK);
-        %as = reshape(as, length(data),[]); 
-
+        as = as(half_wave+1:end-half_wave);
+        
         %Compute time frequency power
         tf(fi,:) = tf(fi,:) + abs(as).^2;
         
@@ -101,7 +98,7 @@ xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("Time Frequency Power Plot")
 colormap(s1,jet);
 
 
-% dB Normalised Plot
+% ITPC Plot
 s2 = subplot(122);
 contourf(timeAxis,frex,itpc,40,'linecolor','none')
 xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("ITPC")
