@@ -60,12 +60,12 @@ end
 
 %% Plotting 
 
-figure(10), clf
+figure(20), clf
 
 %Time Frequency Power Plot
 s1 = subplot(121);
 contourf(EEG.times,frex,tf,40,'linecolor','none')
-%conofinf('morl',dataR,length(data),data(1:1594),'plot');
+%conofinf('morl',EEG.data,EEG.pnts,'plot');
 xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("Time Frequency Power Plot")
 colormap(s1,jet);
 

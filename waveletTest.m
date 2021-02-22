@@ -12,7 +12,8 @@ load mv_20.mat
 % 5 Acceleration signal
 
 % select channel no
-chan_no=1;  % Ext EEG
+eeg_chan=1;  % Ext EEG
+emg_chan=3;  % Ext EMG
 
 %% Setup Parameters
 srate = 1000;           % in Hz
@@ -36,25 +37,32 @@ for trial_no = 1:length(st1)
     % Indexing for extension phase
     trig_ind=st1(trial_no):st1(trial_no)+2999;
 
-    data = double(squeeze(dat(trig_ind,chan_no)));
-    dataR = reshape(data,1,[]);
+    % Setting up data vectors from dat file
+    eeg_data = double(squeeze(dat(trig_ind,eeg_chan)));
+    dataR_eeg = reshape(eeg_data,1,[]);
+    emg_data = double(squeeze(dat(trig_ind,emg_chan)));
+    dataR_emg = reshape(emg_data,1,[]);
 
     % Initialise the time frequency matrix 
     %(number of frequencies by the length of the time vector)
-    tf = zeros(num_freq, length(data));
+    eeg_tf = zeros(num_freq, length(eeg_data));
+    emg_tf = zeros(num_freq, length(emg_data));
+    coherence = zeros(num_freq, length(emg_data));
     
     % Initialise the ITPC matrix 
     %(number of frequencies by the length of the time vector)
-    itpc = zeros(num_freq, length(data));
+    %itpc = zeros(num_freq, length(eeg_data));
 
     % N's for convolution
-    nData = length(dataR);
+    nData = length(dataR_eeg);
     nKern = length(wavelt);
     nConv = nData + nKern - 1;
     half_wave = floor(nKern/2);
 
-    % FFT for data
-    dataX = fft(dataR, nConv);
+    % FFT for eeg and emg data
+    dataX_eeg = fft(dataR_eeg, nConv);
+    dataX_emg = fft(dataR_emg, nConv);
+
 
     for fi=1:num_freq
 
@@ -63,43 +71,53 @@ for trial_no = 1:length(st1)
         cmw = exp(2*1i*pi*frex(fi).*wavelt) .* exp(-wavelt.^2./(2*s^2)); % Morlet Wavelet
 
         kernel = fft(cmw, nConv);
-        
         % max-value normalize the spectrum of the wavelet
         kernel = kernel ./ max(kernel); 
         
-        % Convolve
-        as = ifft(dataX.*kernel);
-        as = as(half_wave+1:end-half_wave);
+        % Convolve EEG
+        eeg_as = ifft(dataX_eeg.*kernel);
+        eeg_as = eeg_as(half_wave+1:end-half_wave);
+        % Convolve EMG
+        emg_as = ifft(dataX_emg.*kernel);
+        emg_as = emg_as(half_wave+1:end-half_wave);
         
-        %Compute time frequency power
-        tf(fi,:) = tf(fi,:) + abs(as).^2;
+        %Compute time frequency power plots
+        eeg_tf(fi,:) = eeg_tf(fi,:) + abs(eeg_as).^2;
+        emg_tf(fi,:) = emg_tf(fi,:) + abs(emg_as).^2;
+        coherence(fi,:) = coherence(fi,:) + abs(eeg_as.*emg_as);
         
         % compute ITPC
-        itpc(fi,:) = itpc(fi,:) + abs(mean(exp(1i*angle(as)),2));
+        %itpc(fi,:) = itpc(fi,:) + abs(mean(exp(1i*angle(as)),2));
 
     end
 end
 
 % Average time frequency power matrix and ITPC over number of trials
-tf = tf*(1/length(st1));
+eeg_tf = eeg_tf*(1/length(st1));
+emg_tf = emg_tf*(1/length(st1));
+coherence = coherence*(1/length(st1));
 
 %% Plotting 
 
 % Time Axis Setup
-timeAxis = (0:length(data)-1)/srate;
+timeAxis = (0:length(eeg_data)-1)/srate;
 
 figure(1), clf
 
 %Time Frequency Power Plot
-s1 = subplot(121);
-contourf(timeAxis,frex,tf,40,'linecolor','none')
+subplot(221);
+contourf(timeAxis,frex,eeg_tf,40,'linecolor','none')
 %conofinf('morl',dataR,length(data),data(1:1594),'plot');
-xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("Time Frequency Power Plot")
-colormap(s1,jet);
+xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("EEG Time Frequency Power Plot, channel: " + eeg_chan)
+
+%Time Frequency Power Plot
+subplot(222);
+contourf(timeAxis,frex,emg_tf,40,'linecolor','none')
+%conofinf('morl',dataR,length(data),data(1:1594),'plot');
+xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("EMG Time Frequency Power Plot, channel: " + emg_chan)
 
 
-% ITPC Plot
-s2 = subplot(122);
-contourf(timeAxis,frex,itpc,40,'linecolor','none')
-xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("ITPC")
-colormap(s2,hot);
+% Coherence Plot
+subplot(2,2,[3,4]);
+contourf(timeAxis,frex,coherence,40,'linecolor','none')
+xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("Coherence Plot for EEG & EMG channels: " + eeg_chan + " & " + emg_chan + " , During holding phase st1")
