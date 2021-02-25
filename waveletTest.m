@@ -20,8 +20,8 @@ srate = 1000;           % in Hz
 wavelt = -2:1/srate:2;  % best practice to have 0 in the center of the wavelet
 
 % Frequency parameters
-min_freq = 8; % Hz
-max_freq = 30; % Hz
+min_freq = 10; % Hz
+max_freq = 35; % Hz
 num_freq = 40; % count
 frex = logspace(log10(min_freq),log10(max_freq),num_freq);
 
@@ -41,7 +41,7 @@ for trial_no = 1:length(st1)
     eeg_data = double(squeeze(dat(trig_ind,eeg_chan)));
     dataR_eeg = reshape(eeg_data,1,[]);
     emg_data = double(squeeze(dat(trig_ind,emg_chan)));
-    dataR_emg = reshape(emg_data,1,[]);
+    dataR_emg = abs(reshape(emg_data,1,[]));
 
     % Initialise the time frequency matrix 
     %(number of frequencies by the length of the time vector)
@@ -81,13 +81,20 @@ for trial_no = 1:length(st1)
         emg_as = ifft(dataX_emg.*kernel);
         emg_as = emg_as(half_wave+1:end-half_wave);
         
+        % Time Frequency Cross Spectrum Equations
+        Sxy = eeg_as.*conj(emg_as);  %11
+        Sx = abs(eeg_as).^2;         %12
+        Sy = abs(emg_as).^2;         %13
+        
         %Compute time frequency power plots
-        eeg_tf(fi,:) = eeg_tf(fi,:) + abs(eeg_as).^2;
-        emg_tf(fi,:) = emg_tf(fi,:) + abs(emg_as).^2;
-        coherence(fi,:) = coherence(fi,:) + abs(eeg_as.*emg_as);
+        eeg_tf(fi,:) = eeg_tf(fi,:) + Sx; 
+        emg_tf(fi,:) = emg_tf(fi,:) + Sy;
+        
+        % Time Frequency Coherence
+        coherence(fi,:) = coherence(fi,:) + (abs(Sxy).^2 ./ Sx.*Sy);
         
         % compute ITPC
-        %itpc(fi,:) = itpc(fi,:) + abs(mean(exp(1i*angle(as)),2));
+        %itpc(fi,:) = itpc(fi,:) + abs(mean(exp(1i*angle(Sxy)),2));
 
     end
 end
@@ -107,17 +114,21 @@ figure(1), clf
 %Time Frequency Power Plot
 subplot(221);
 contourf(timeAxis,frex,eeg_tf,40,'linecolor','none')
-%conofinf('morl',dataR,length(data),data(1:1594),'plot');
 xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("EEG Time Frequency Power Plot, channel: " + eeg_chan)
 
 %Time Frequency Power Plot
 subplot(222);
 contourf(timeAxis,frex,emg_tf,40,'linecolor','none')
-%conofinf('morl',dataR,length(data),data(1:1594),'plot');
 xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("EMG Time Frequency Power Plot, channel: " + emg_chan)
 
 
 % Coherence Plot
 subplot(2,2,[3,4]);
 contourf(timeAxis,frex,coherence,40,'linecolor','none')
+colorbar
 xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("Coherence Plot for EEG & EMG channels: " + eeg_chan + " & " + emg_chan + " , During holding phase st1")
+
+% Coherence Plot
+%subplot(2,2,4);
+%contourf(timeAxis,frex,itpc,40,'linecolor','none')
+%xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("Coherence Plot for EEG & EMG channels: " + eeg_chan + " & " + emg_chan + " , During holding phase st1")
