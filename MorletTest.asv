@@ -12,16 +12,12 @@ load mv_20.mat
 % 5 Acceleration signal
 
 % select channel no
-eeg_chan=2;  % Ext EEG
-emg_chan=3;  % Ext EMG
+eeg_chan=1;  % Ext EEG
+emg_chan=1;  % Ext EMG
 
 %% Setup Parameters
 srate = 1000;           % in Hz
 wavelt = -2:1/srate:2;  % best practice to have 0 in the center of the wavelet
-
-eeg_tf = 0;
-emg_tf = 0;
-coherence = 0;
 
 % Frequency parameters
 min_freq = 10; % Hz
@@ -45,13 +41,14 @@ for trial_no = 1:length(st1)
     eeg_data = double(squeeze(dat(trig_ind,eeg_chan)));
     dataR_eeg = reshape(eeg_data,1,[]);
     emg_data = double(squeeze(dat(trig_ind,emg_chan)));
-    dataR_emg = abs(reshape(emg_data,1,[]));
-    %dataR_emg = reshape(emg_data,1,[]);
+    %dataR_emg = abs(reshape(emg_data,1,[]));
+    dataR_emg = reshape(emg_data,1,[]);
 
     % Initialise the time frequency matrix 
     %(number of frequencies by the length of the time vector)
-    eeg = zeros(num_freq, length(eeg_data));
-    emg = zeros(num_freq, length(emg_data));
+    eeg_tf = zeros(num_freq, length(eeg_data));
+    emg_tf = zeros(num_freq, length(emg_data));
+    coherence = zeros(num_freq, length(emg_data));
     
     % Initialise the ITPC matrix 
     %(number of frequencies by the length of the time vector)
@@ -91,9 +88,9 @@ for trial_no = 1:length(st1)
     end
     
     % Time Frequency Cross Spectrum Equations
-    eeg_tf = eeg_tf + abs(eeg.*eeg); 
-    emg_tf = emg_tf + abs(emg.*emg);
-    coherence = coherence + (eeg.*conj(emg));
+    eeg_tf = eeg_tf + abs(eeg_as).^2; 
+    emg_tf = emg_tf + abs(emg_as).^2;
+    coherence = coherence + eeg_as.*conj(emg_as);
 
     % compute ITPC
     %itpc = itpc + abs(mean(exp(1i*angle(Sxy)),2));
