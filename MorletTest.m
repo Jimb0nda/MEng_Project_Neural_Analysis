@@ -17,7 +17,6 @@ emg_chan=3;  % Ext EMG
 
 %% Setup Parameters
 srate = 1000;           % in Hz
-wavelt = -2:1/srate:2;  % best practice to have 0 in the center of the wavelet
 
 eeg_tf = 0;
 emg_tf = 0;
@@ -28,10 +27,6 @@ min_freq = 10; % Hz
 max_freq = 35; % Hz
 num_freq = 40; % count
 frex = logspace(log10(min_freq),log10(max_freq),num_freq);
-
-% different wavelet widths (number of wavelet cycles)
-range_cycles = [ 4 10 ];
-nCycles = logspace(log10(range_cycles(1)),log10(range_cycles(end)),num_freq);
 
 %% Loop through trials
 
@@ -48,55 +43,13 @@ for trial_no = 1:length(st1)
     dataR_emg = abs(reshape(emg_data,1,[]));
     %dataR_emg = reshape(emg_data,1,[]);
 
-    % Initialise the time frequency matrix 
-    %(number of frequencies by the length of the time vector)
-    eeg = zeros(num_freq, length(eeg_data));
-    emg = zeros(num_freq, length(emg_data));
-    
-    % Initialise the ITPC matrix 
-    %(number of frequencies by the length of the time vector)
-    %itpc = zeros(num_freq, length(eeg_data));
-
-    % N's for convolution
-    nData = length(dataR_eeg);
-    nKern = length(wavelt);
-    nConv = nData + nKern - 1;
-    half_wave = floor(nKern/2);
-
-    % FFT for eeg and emg data
-    dataX_eeg = fft(dataR_eeg, nConv);
-    dataX_emg = fft(dataR_emg, nConv);
-
-
-    for fi=1:num_freq
-
-        % create wavelet and get its FFT
-        s = nCycles(fi)/(2*pi*frex(fi));
-        cmw = exp(2*1i*pi*frex(fi).*wavelt) .* exp(-wavelt.^2./(2*s^2)); % Morlet Wavelet
-
-        kernel = fft(cmw, nConv);
-        % max-value normalize the spectrum of the wavelet
-        kernel = kernel ./ max(kernel); 
-        
-        % Convolve EEG
-        eeg_as = ifft(dataX_eeg.*kernel);
-        eeg_as = eeg_as(half_wave+1:end-half_wave);
-        eeg(fi,:) = eeg(fi,:) + eeg_as;
-        % Convolve EMG
-        emg_as = ifft(dataX_emg.*kernel);
-        emg_as = emg_as(half_wave+1:end-half_wave);
-        emg(fi,:) = emg(fi,:) + emg_as;
-        
-
-    end
+    [eeg, emg, itpc] = morlet_filter(srate, dataR_eeg, dataR_emg, num_freq, frex);
     
     % Time Frequency Cross Spectrum Equations
     eeg_tf = eeg_tf + abs(eeg.*eeg); 
     emg_tf = emg_tf + abs(emg.*emg);
     coherence = coherence + (eeg.*conj(emg));
 
-    % compute ITPC
-    %itpc = itpc + abs(mean(exp(1i*angle(Sxy)),2));
     
 end
 
@@ -111,14 +64,14 @@ coherence = coherence/length(st1);
 f(:,:,1)=eeg_tf;
 f(:,:,2)=emg_tf;
 f(:,:,3)=abs(coherence) .* abs(coherence) ./ (eeg_tf.*emg_tf);
-f(:,:,4)=angle(coherence);
+f(:,:,4)=itpc;
 
 %% Plotting 
 
 % Time Axis Setup
 timeAxis = (0:length(eeg_data)-1)/srate;
 
-figure(2), clf
+figure(1), clf
 
 %Time Frequency Power Plot
 subplot(221);
@@ -137,7 +90,12 @@ contourf(timeAxis,frex,f(:,:,3),40,'linecolor','none')
 colorbar
 xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("Coherence Plot for EEG & EMG channels: " + eeg_chan + " & " + emg_chan + " , During holding phase st1")
 
+figure(2), clf
 % ITPC Plot
-%subplot(2,2,4);
-%contourf(timeAxis,frex,f(:,:,4),40,'linecolor','none')
-%label('Time (s)'), ylabel('Frequency (Hz)'), title("ITPC Plot for EEG & EMG channels: " + eeg_chan + " & " + emg_chan + " , During holding phase st1")
+subplot(121);
+polarhistogram(f(:,:,4))
+
+subplot(122)
+contourf(timeAxis,frex,f(:,:,4),40,'linecolor','none')
+colorbar
+xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("ITPC Plot for EEG & EMG channels: " + eeg_chan + " & " + emg_chan + " , During holding phase st1")

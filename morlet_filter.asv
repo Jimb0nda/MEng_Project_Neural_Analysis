@@ -1,4 +1,4 @@
-function [eeg, emg, itpc] = morlet_filter(srate,dataR_eeg, dataR_emg, num_freq, frex)
+function [eeg, emg] = morlet_filter(srate,dataR_eeg, dataR_emg, num_freq, frex)
 
 % best practice to have 0 in the center of the wavelet
 wavelt = -2:1/srate:2;  
@@ -12,7 +12,7 @@ nCycles = logspace(log10(range_cycles(1)),log10(range_cycles(end)),num_freq);
 %(number of frequencies by the length of the time vector)
 eeg = zeros(num_freq, length(dataR_eeg));
 emg = zeros(num_freq, length(dataR_eeg));
-itpc = zeros(num_freq, length(dataR_eeg));
+itpc = 
 
 % N's for convolution
 nData = length(dataR_eeg);
