@@ -33,7 +33,7 @@ frex = logspace(log10(min_freq),log10(max_freq),num_freq);
 range_cycles = [ 4 10 ];
 nCycles = logspace(log10(range_cycles(1)),log10(range_cycles(end)),num_freq);
 
-%% Initialise loops
+%% Loop through trials
 
 
 for trial_no = 1:length(st1)
@@ -137,7 +137,7 @@ contourf(timeAxis,frex,f(:,:,3),40,'linecolor','none')
 colorbar
 xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("Coherence Plot for EEG & EMG channels: " + eeg_chan + " & " + emg_chan + " , During holding phase st1")
 
-% Coherence Plot
+% ITPC Plot
 %subplot(2,2,4);
-%contourf(timeAxis,frex,itpc,40,'linecolor','none')
-%xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("Coherence Plot for EEG & EMG channels: " + eeg_chan + " & " + emg_chan + " , During holding phase st1")
+%contourf(timeAxis,frex,f(:,:,4),40,'linecolor','none')
+%label('Time (s)'), ylabel('Frequency (Hz)'), title("ITPC Plot for EEG & EMG channels: " + eeg_chan + " & " + emg_chan + " , During holding phase st1")
