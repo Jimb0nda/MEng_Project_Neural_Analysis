@@ -1,18 +1,24 @@
-function [eeg, emg] = morlet_filter(srate,dataR_eeg, dataR_emg, num_freq, frex)
+function [eeg, emg, itpc] = morse_filter(srate,dataR_eeg, dataR_emg)
+
+%% Setup Parameters
 
 % best practice to have 0 in the center of the wavelet
-wavelt = -2:1/srate:2;  
+wavelt = -2:1/srate:2;
 
-% different wavelet widths (number of wavelet cycles)
-range_cycles = [ 4 10 ];
-nCycles = logspace(log10(range_cycles(1)),log10(range_cycles(end)),num_freq);
+%Wavelet Parameters
+a = 0.501;
+gamma = 3;
+beta = 27;
 
+% Frequency parameters
+min_freq = 0;
+num_freq = 40; % count
 
 % Initialise the time frequency matrix 
 %(number of frequencies by the length of the time vector)
 eeg = zeros(num_freq, length(dataR_eeg));
 emg = zeros(num_freq, length(dataR_eeg));
-itpc = 
+itpc = zeros(num_freq, length(dataR_eeg));
 
 % N's for convolution
 nData = length(dataR_eeg);
@@ -24,28 +30,33 @@ half_wave = floor(nKern/2);
 dataX_eeg = fft(dataR_eeg, nConv);
 dataX_emg = fft(dataR_emg, nConv);
 
+for i = 1:beta
+    
+    Wbg = (i/gamma)^(1/gamma); % maximum value at the peak frequency
 
-for fi=1:num_freq
-
-    % create wavelet and get its FFT
-    s = nCycles(fi)/(2*pi*frex(fi));
-    cmw = exp(2*1i*pi*frex(fi).*wavelt) .* exp(-wavelt.^2./(2*s^2)); % Morlet Wavelet
-
-    kernel = fft(cmw, nConv);
+    % Frequency parameters
+    max_freq = Wbg;
+    frex = linspace(min_freq,max_freq,num_freq);
+    
+    awt =  a .* ((2*pi.*frex).^i) .* (exp(-(2*pi.*frex).^gamma));
+    
+    kernel = fft(awt, nConv);
     % max-value normalize the spectrum of the wavelet
     kernel = kernel ./ max(kernel); 
-
-    % Convolve EEG
+    
+     % Convolve EEG
     eeg_as = ifft(dataX_eeg.*kernel);
     eeg_as = eeg_as(half_wave+1:end-half_wave);
-    eeg(fi,:) = eeg(fi,:) + eeg_as;
+    eeg(i,:) = eeg(i,:) + eeg_as;
     % Convolve EMG
     emg_as = ifft(dataX_emg.*kernel);
     emg_as = emg_as(half_wave+1:end-half_wave);
-    emg(fi,:) = emg(fi,:) + emg_as;
+    emg(i,:) = emg(i,:) + emg_as;
 
     % compute ITPC
-    itpc(fi,:) =  abs(mean(exp(1i*angle(eeg.*conj(emg)))));
+    itpc(i,:) =  abs(mean(exp(1i*angle(eeg.*conj(emg)))));
+    
+end
 
 end
 

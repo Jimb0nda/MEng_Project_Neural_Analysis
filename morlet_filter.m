@@ -45,7 +45,9 @@ for fi=1:num_freq
     emg(fi,:) = emg(fi,:) + emg_as;
 
     % compute ITPC
-    itpc(fi,:) =  abs(mean(exp(1i*angle(eeg.*conj(emg)))));
+    %itpc(fi,:) =  abs(mean(exp(1i*angle(eeg.*conj(emg))),2));
+
+end
 
 end
 

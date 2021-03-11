@@ -90,14 +90,14 @@ timeAxis = (0:length(data)-1)/srate;
 figure(10), clf
 
 %Time Frequency Power Plot
-s1 = subplot(121);
+%s1 = subplot(121);
 contourf(timeAxis,frex,tf,40,'linecolor','none')
 %conofinf('morl',dataR,length(data),data(1:1594),'plot');
 xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("Time Frequency Power Plot")
 colormap(s1,jet);
 
-% ITPC Plot
-s2 = subplot(122);
-contourf(timeAxis,frex,itpc,40,'linecolor','none')
-xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("ITPC")
-colormap(s2,jet);
+% % ITPC Plot
+% s2 = subplot(122);
+% contourf(timeAxis,frex,itpc,40,'linecolor','none')
+% xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("ITPC")
+% colormap(s2,jet);

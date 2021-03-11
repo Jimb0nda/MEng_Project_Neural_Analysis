@@ -45,6 +45,8 @@ for trial_no = 1:length(st1)
 
     [eeg, emg, itpc] = morlet_filter(srate, dataR_eeg, dataR_emg, num_freq, frex);
     
+    %[eeg, emg, itpc] = morse_filter(srate,dataR_eeg, dataR_emg);
+    
     % Time Frequency Cross Spectrum Equations
     eeg_tf = eeg_tf + abs(eeg.*eeg); 
     emg_tf = emg_tf + abs(emg.*emg);
@@ -61,10 +63,10 @@ coherence = coherence/length(st1);
 %% Test
 
  % Construct output spectral matrix f.
-f(:,:,1)=eeg_tf;
-f(:,:,2)=emg_tf;
+f(:,:,1)=log10(eeg_tf);
+f(:,:,2)=log10(emg_tf);
 f(:,:,3)=abs(coherence) .* abs(coherence) ./ (eeg_tf.*emg_tf);
-f(:,:,4)=itpc;
+%f(:,:,4)=itpc;
 
 %% Plotting 
 
@@ -73,16 +75,17 @@ timeAxis = (0:length(eeg_data)-1)/srate;
 
 figure(1), clf
 
-%Time Frequency Power Plot
+% EEG Time Frequency Power Plot
 subplot(221);
 contourf(timeAxis,frex,f(:,:,1),40,'linecolor','none')
+colorbar
 xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("EEG Time Frequency Power Plot, channel: " + eeg_chan)
 
-%Time Frequency Power Plot
+% EMG Time Frequency Power Plot
 subplot(222);
 contourf(timeAxis,frex,f(:,:,2),40,'linecolor','none')
+colorbar
 xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("EMG Time Frequency Power Plot, channel: " + emg_chan)
-
 
 % Coherence Plot
 subplot(2,2,[3,4]);
@@ -90,12 +93,12 @@ contourf(timeAxis,frex,f(:,:,3),40,'linecolor','none')
 colorbar
 xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("Coherence Plot for EEG & EMG channels: " + eeg_chan + " & " + emg_chan + " , During holding phase st1")
 
-figure(2), clf
-% ITPC Plot
-subplot(121);
-polarhistogram(f(:,:,4))
-
-subplot(122)
-contourf(timeAxis,frex,f(:,:,4),40,'linecolor','none')
-colorbar
-xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("ITPC Plot for EEG & EMG channels: " + eeg_chan + " & " + emg_chan + " , During holding phase st1")
+% figure(2), clf
+% % ITPC Plot
+% subplot(121);
+% polarhistogram(f(:,:,4))
+% 
+% subplot(122)
+% contourf(timeAxis,frex,f(:,:,4),40,'linecolor','none')
+% colorbar
+% xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("ITPC Plot for EEG & EMG channels: " + eeg_chan + " & " + emg_chan + " , During holding phase st1")
