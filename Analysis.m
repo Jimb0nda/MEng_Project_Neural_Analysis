@@ -22,11 +22,17 @@ eeg_tf = 0;
 emg_tf = 0;
 coherence = 0;
 
-% Frequency parameters
-min_freq = 10; % Hz
+% Frequency parameters for Morse
+min_freq = 0; % Hz
 max_freq = 35; % Hz
 num_freq = 40; % count
-frex = logspace(log10(min_freq),log10(max_freq),num_freq);
+frex = linspace(min_freq,max_freq,num_freq);
+
+% % Frequency parameters for Morlet
+% min_freq = 4; % Hz
+% max_freq = 30; % Hz
+% num_freq = 30; % count
+% frex = logspace(log10(min_freq),log10(max_freq),num_freq);
 
 %% Loop through trials
 
@@ -43,9 +49,11 @@ for trial_no = 1:length(st1)
     dataR_emg = abs(reshape(emg_data,1,[]));
     %dataR_emg = reshape(emg_data,1,[]);
 
-    [eeg, emg, itpc] = morlet_filter(srate, dataR_eeg, dataR_emg, num_freq, frex);
+    % Morlet Analysis
+    %[eeg, emg, itpc] = morlet_filter(srate, dataR_eeg, dataR_emg, num_freq, frex);
     
-    %[eeg, emg, itpc] = morse_filter(srate,dataR_eeg, dataR_emg);
+    % Morse Analysis
+    [eeg, emg] = morse_filter(srate,dataR_eeg, dataR_emg, num_freq, frex);
     
     % Time Frequency Cross Spectrum Equations
     eeg_tf = eeg_tf + abs(eeg.*eeg); 

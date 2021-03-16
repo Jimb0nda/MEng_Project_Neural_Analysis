@@ -29,7 +29,8 @@ for fi=1:num_freq
 
     % create wavelet and get its FFT
     s = nCycles(fi)/(2*pi*frex(fi));
-    cmw = exp(2*1i*pi*frex(fi).*wavelt) .* exp(-wavelt.^2./(2*s^2)); % Morlet Wavelet
+    % Morlet Wavelet
+    cmw = exp(2*1i*pi*frex(fi).*wavelt) .* exp(-wavelt.^2./(2*s^2)); 
 
     kernel = fft(cmw, nConv);
     % max-value normalize the spectrum of the wavelet

@@ -1,24 +1,24 @@
-function [eeg, emg, itpc] = morse_filter(srate,dataR_eeg, dataR_emg)
+function [eeg, emg] = morse_filter(srate,dataR_eeg, dataR_emg,num_freq,frex)
 
 %% Setup Parameters
 
 % best practice to have 0 in the center of the wavelet
 wavelt = -2:1/srate:2;
 
-%Wavelet Parameters
-a = 0.501;
-gamma = 3;
-beta = 27;
+b = 9;
+g = 3;
 
-% Frequency parameters
-min_freq = 0;
-num_freq = 40; % count
+Wbg = (b/g)^(1/g); % maximum value at the peak frequency
+
+% Normalisation factor (Olhede & Walden, 2002, P2666, k=0)
+r=(2*b+1)/g;
+A=sqrt(pi*g*2^r*exp(-gammaln(r)));
 
 % Initialise the time frequency matrix 
 %(number of frequencies by the length of the time vector)
 eeg = zeros(num_freq, length(dataR_eeg));
 emg = zeros(num_freq, length(dataR_eeg));
-itpc = zeros(num_freq, length(dataR_eeg));
+%itpc = zeros(num_freq, length(dataR_eeg));
 
 % N's for convolution
 nData = length(dataR_eeg);
@@ -30,19 +30,21 @@ half_wave = floor(nKern/2);
 dataX_eeg = fft(dataR_eeg, nConv);
 dataX_emg = fft(dataR_emg, nConv);
 
-for i = 1:beta
+for i = 1:num_freq
     
-    Wbg = (i/gamma)^(1/gamma); % maximum value at the peak frequency
+    y  = Wbg*frex;             % shifted frequencies
+    wa = 2*pi*y;
 
-    % Frequency parameters
-    max_freq = Wbg;
-    frex = linspace(min_freq,max_freq,num_freq);
-    
-    awt =  a .* ((2*pi.*frex).^i) .* (exp(-(2*pi.*frex).^gamma));
-    
-    kernel = fft(awt, nConv);
+    % Normalisation factor for unit energy at each scale
+    scale_fac=sqrt(srate*Wbg);
+
+    % Generate normalised, scaled wavelet (Olhede & Walden, 2002, P2666, (10), k=0)
+    awt = scale_fac*sqrt(2)*A*(wa.^b).*(exp(-wa.^g));
+    % Botched way of adding the zero padding, would fix later
+    awt = ifft(awt);
+    awt = fft(awt,nConv);
     % max-value normalize the spectrum of the wavelet
-    kernel = kernel ./ max(kernel); 
+    kernel = awt ./ max(awt); 
     
      % Convolve EEG
     eeg_as = ifft(dataX_eeg.*kernel);
@@ -54,7 +56,7 @@ for i = 1:beta
     emg(i,:) = emg(i,:) + emg_as;
 
     % compute ITPC
-    itpc(i,:) =  abs(mean(exp(1i*angle(eeg.*conj(emg)))));
+    %itpc(i,:) =  abs(mean(exp(1i*angle(eeg.*conj(emg)))));
     
 end
 

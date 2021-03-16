@@ -2,37 +2,45 @@ clear
 
 %% Setup Parameters
 srate = 1000;           % in Hz
+npnts = 3001;
 
-%Wavelet Parameters
-a = 0.501;
-gamma = 3;
-beta = 3;
+% vector of frequencies
+hz = linspace(0,35,npnts);
 
-Wbg = (beta/gamma)^(1/gamma); % maximum value at the peak frequency
+b = 9;
+g = 3;
 
-% Frequency parameters
-min_freq = 0; 
-max_freq = Wbg; 
-num_freq = 45; % count
-frex = linspace(min_freq,max_freq,num_freq);
+Wbg = (b/g)^(1/g); % maximum value at the peak frequency
+
+% Normalisation factor (Olhede & Walden, 2002, P2666, k=0)
+r=(2*b+1)/g;
+A=sqrt(pi*g*2^r*exp(-gammaln(r)));
+
+y  = Wbg*hz;             % shifted frequencies
+wa = 2*pi*y;
+
+% Normalisation factor for unit energy at each scale
+scale_fac=sqrt(srate*Wbg);
 
 %% Morse Wavelet
 
-awt =  a .* ((2*pi.*frex).^beta) .* (exp(-(2*pi.*frex).^gamma));
+awt = scale_fac*sqrt(2)*A*(wa.^b).*(exp(-wa.^g));
 awt = awt ./ max(awt);
 
 x = fftshift(ifft(awt));
 %% Plotting
+
+time = (-floor(npnts/2):floor(npnts/2))/srate;
 
 figure(4), clf
 subplot(121);
 plot(time,real(x));
 hold on
 plot(time,imag(x));
-title("Time Domain Morse Wavelet: β = " + beta + " & γ = " + gamma)
+title("Time Domain Morse Wavelet: β = " + b + " & γ = " + g)
 hold off
 
 subplot(122)
-plot(frex,awt);
-title("Freq Domain Morse Wavelet: β = " + beta + " & γ = " + gamma)
+plot(hz,awt);
+title("Freq Domain Morse Wavelet: β = " + b + " & γ = " + g)
 

@@ -4,6 +4,8 @@ clear
 srate = 1000;           % in Hz
 wavelt = -2:1/srate:2;  % best practice to have 0 in the center of the wavelet
 
+data = 0;
+
 % Frequency parameters
 min_freq = 4; % Hz
 max_freq = 30; % Hz
@@ -18,23 +20,29 @@ nCycles = logspace(log10(range_cycles(1)),log10(range_cycles(end)),num_freq);
 pnts   = 3000;
 times = (0:pnts-1)/srate;
 
-for trials = 1:40
-    %% transient oscillations w/ Gaussian
 
-    % Gaussian and sine parameters
-    peaktime = 2; % seconds
-    width    = .12;
-    sinefreq = 15; % for sine wave
+% Gaussian and sine parameters
+peaktime = [0.5 1 1.5 2 2.5]; % seconds
+width    = .12;
+sinefreq = [5 10 15 20 25]; % for sine wave
 
+for i = 1:length(peaktime)
+   
     % create Gaussian taper
-    gaus = exp( -(times-peaktime).^2 / (2*width^2) );
-
+    gaus = exp( -(times-peaktime(i)).^2 / (2*width^2) );
     % trial-unique sine wave
-    cosw = cos(2*pi*sinefreq*times);
+    cosw = cos(2*pi*sinefreq(i)*times);
+    
+    data = data + 0.4*(cosw).* gaus;
+    
+end
 
-    data = randn(1,3000) + 0.4*(cosw);% .* gaus
 
-    %% Initialise loops
+data = data + randn(1,3000);
+
+%% Loop
+
+for trials = 1:40
 
     dataR = reshape(data,1,[]);
 
@@ -94,7 +102,7 @@ figure(10), clf
 contourf(timeAxis,frex,tf,40,'linecolor','none')
 %conofinf('morl',dataR,length(data),data(1:1594),'plot');
 xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("Time Frequency Power Plot")
-colormap(s1,jet);
+colormap(jet);
 
 % % ITPC Plot
 % s2 = subplot(122);
