@@ -4,7 +4,7 @@ clear
 srate = 1000;           % in Hz
 npnts = 20000;
 
-hz = linspace(0,srate/2,npnts);
+hz = logspace(0,srate/2,npnts)
 
 % Frequency parameters for Morse
 min_freq = 4; % Hz
@@ -30,10 +30,10 @@ A=sqrt(pi*g*2^r*exp(-gammaln(r)));
 
 for i = 1:num_freq
     
-    a = Wbg/(frex(i)*2*pi);
+    a = Wbg/frex(i);
     fa  = a*freq;        
     wa = (2*pi*fa)';
-    %wa = [wa,zeros(1,npnts/2-1)];
+    wa = [wa,zeros(1,npnts/2-1)];
 
     % Normalisation factor for unit energy at each scale
     scale_fac=sqrt(srate*a);
@@ -41,12 +41,11 @@ for i = 1:num_freq
     
     % Generate normalised, scaled wavelet (Olhede & Walden, 2002, P2666, (10), k=0)
     awt = scale_fac*sqrt(2)*A*wa.^b.*(exp(-wa.^g));
-    awt = [awt,zeros(1,npnts/2-1)];
     
     
     % Plotting
     figure(15), hold on
-    plot(hz,awt);
+    plot(awt);
     title("Freq Domain Morse Wavelet: β = " + b + " & γ = " + g)
 
 

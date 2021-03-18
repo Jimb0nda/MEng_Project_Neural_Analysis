@@ -22,17 +22,10 @@ eeg_tf = 0;
 emg_tf = 0;
 coherence = 0;
 
-% Frequency parameters for Morse
-min_freq = 0; % Hz
-max_freq = 35; % Hz
-num_freq = 40; % count
-frex = linspace(min_freq,max_freq,num_freq);
-
-% % Frequency parameters for Morlet
-% min_freq = 4; % Hz
-% max_freq = 30; % Hz
-% num_freq = 30; % count
-% frex = logspace(log10(min_freq),log10(max_freq),num_freq);
+min_freq = 10; % Hz
+max_freq = 36; % Hz
+num_freq = 30; % count
+frex = logspace(log10(min_freq),log10(max_freq),num_freq);
 
 %% Loop through trials
 
