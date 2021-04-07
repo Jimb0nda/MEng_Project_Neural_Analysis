@@ -46,7 +46,7 @@ for trial_no = 1:length(st1)
     %[eeg, emg, itpc] = morlet_filter(srate, dataR_eeg, dataR_emg, num_freq, frex);
     
     % Morse Analysis
-    [eeg, emg] = morse_filter(srate,dataR_eeg, dataR_emg, num_freq, frex);
+    [eeg, emg,t, itpc] = morse_filter(srate,dataR_eeg, dataR_emg, num_freq, frex);
     
     % Time Frequency Cross Spectrum Equations
     eeg_tf = eeg_tf + abs(eeg.*eeg); 
@@ -67,7 +67,7 @@ coherence = coherence/length(st1);
 f(:,:,1)=log10(eeg_tf);
 f(:,:,2)=log10(emg_tf);
 f(:,:,3)=abs(coherence) .* abs(coherence) ./ (eeg_tf.*emg_tf);
-%f(:,:,4)=itpc;
+f(:,:,4)=itpc;
 
 %% Plotting 
 
@@ -90,16 +90,18 @@ xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("EMG Time Frequency Power Pl
 
 % Coherence Plot
 subplot(2,2,[3,4]);
+hold on
 contourf(timeAxis,frex,f(:,:,3),40,'linecolor','none')
+%plot(t,'r')
 colorbar
 xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("Coherence Plot for EEG & EMG channels: " + eeg_chan + " & " + emg_chan + " , During holding phase st1")
+hold off
 
-% figure(2), clf
-% % ITPC Plot
-% subplot(121);
-% polarhistogram(f(:,:,4))
-% 
-% subplot(122)
-% contourf(timeAxis,frex,f(:,:,4),40,'linecolor','none')
-% colorbar
-% xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("ITPC Plot for EEG & EMG channels: " + eeg_chan + " & " + emg_chan + " , During holding phase st1")
+% figure(3), clf
+% plot(srate,t,'r')
+
+figure(2), clf
+% ITPC Plot
+contourf(timeAxis,frex,f(:,:,4),40,'linecolor','none')
+colorbar
+xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("ITPC Plot for EEG & EMG channels: " + eeg_chan + " & " + emg_chan + " , During holding phase st1")

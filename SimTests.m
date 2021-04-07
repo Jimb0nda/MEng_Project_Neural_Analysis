@@ -5,6 +5,9 @@ srate = 1000;           % in Hz
 wavelt = -2:1/srate:2;  % best practice to have 0 in the center of the wavelet
 
 data = 0;
+sim_tf1 = 0;
+sim_tf2 = 0;
+coherence = 0;
 
 % Frequency parameters
 min_freq = 4; % Hz
@@ -31,81 +34,80 @@ for i = 1:length(peaktime)
     % create Gaussian taper
     gaus = exp( -(times-peaktime(i)).^2 / (2*width^2) );
     % trial-unique sine wave
-    cosw = cos(2*pi*sinefreq(i)*times);
+    cosw = cos(2*pi*sinefreq(2)*times);
     
-    data = data + 0.4*(cosw).* gaus;
+    data = data + 0.4*(cosw);
     
 end
 
-
-data = data + randn(1,3000);
+% figure(9), clf
+% subplot(211)
+% plot(data)
+% title("Cosine Pulses at Increasing Frequency")
+% 
+% data1 = data  +  noise;
+% snr = snr(data,noise);
+% 
+% subplot(212)
+% plot(data1)
+% title("Cosine Pulses at Increasing Frequency with added Noise, SNR:" + snr + "dB")
 
 %% Loop
 
 for trials = 1:40
+    
+    noise1 = randn(1,3000);
+    noise2 = randn(1,3000);
+    data1 = data + noise1;
+    data2 = data + noise2;
 
-    dataR = reshape(data,1,[]);
+    dataR1 = reshape(data1,1,[]);
+    dataR2 = reshape(data2,1,[]);
 
-    % Initialise the time frequency matrix 
-    %(number of frequencies by the length of the time vector)
-    tf = zeros(num_freq, length(data));
-
-    % Initialise the ITPC matrix 
-    %(number of frequencies by the length of the time vector)
-    itpc = zeros(num_freq, length(data));
-
-    % N's for convolution
-    nData = length(dataR);
-    nKern = length(wavelt);
-    nConv = nData + nKern - 1;
-    half_wave = floor(nKern/2);
-
-    % FFT for data
-    dataX = fft(dataR, nConv);
-
-    for fi=1:num_freq
-
-        % create wavelet and get its FFT
-        s = nCycles(fi)/(2*pi*frex(fi));
-        cmw = exp(2*1i*pi*frex(fi).*wavelt) .* exp(-wavelt.^2./(2*s^2)); % Morlet Wavelet
-
-        kernel = fft(cmw, nConv);
-        % max-value normalize the spectrum of the wavelet
-        kernel = kernel ./ max(kernel); 
-
-        % Convolve
-        as = ifft(dataX.*kernel);
-        as = as(half_wave+1:end-half_wave);
-        %as = reshape(as, length(data),[]); 
-
-        %Compute time frequency power
-        tf(fi,:) = tf(fi,:) + abs(as).^2;
-
-        % compute ITPC
-        itpc(fi,:) = itpc(fi,:) + abs(mean(exp(1i*angle(as)),2));
-
-    end
+    % Morlet Analysis
+    %[tf1, tf2, itpc] = morlet_filter(srate, dataR1, dataR2, num_freq, frex);
+    
+    % Morse Analysis
+    [tf1, tf2, itpc] = morse_filter(srate,dataR1, dataR2, num_freq, frex);
+    
+    
+    % Time Frequency Cross Spectrum Equations
+    sim_tf1 = sim_tf1 + abs(tf1.*tf1); 
+    sim_tf2 = sim_tf2 + abs(tf2.*tf2);
+    coherence = coherence + (tf1.*conj(tf2));
+    % compute ITPC
+    %itpc(fi,:) = itpc(fi,:) + abs(mean(exp(1i*angle(coherence))));
+    
 end
 
 % Average time frequency power matrix and ITPC over number of trials
-tf = tf*(1/40);
+sim_tf1 = sim_tf1/40;
+sim_tf2 = sim_tf2/40;
+coherence = coherence/40;
+
+ % Construct output spectral matrix f.
+f(:,:,1)=log10(sim_tf1);
+f(:,:,2)=log10(sim_tf2);
+f(:,:,3)=abs(coherence) .* abs(coherence) ./ (sim_tf1.*sim_tf2);
+%f(:,:,4)=itpc;
 
 %% Plotting 
 
 % Time Axis Setup
 timeAxis = (0:length(data)-1)/srate;
 
-figure(10), clf
+figure(12), clf
 
 %Time Frequency Power Plot
 %s1 = subplot(121);
-contourf(timeAxis,frex,tf,40,'linecolor','none')
-%conofinf('morl',dataR,length(data),data(1:1594),'plot');
-xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("Time Frequency Power Plot")
+contourf(timeAxis,frex,f(:,:,3),40,'linecolor','none')
+colorbar
+xlabel('Time (s)'), ylabel('Frequency (Hz)')
 colormap(jet);
 
+% figure(11), clf
 % % ITPC Plot
-% s2 = subplot(122);
+% % s2 = subplot(122);
 % contourf(timeAxis,frex,itpc,40,'linecolor','none')
 % xlabel('Time (s)'), ylabel('Frequency (Hz)'), title("ITPC")
-% colormap(s2,jet);
+% colormap(jet);

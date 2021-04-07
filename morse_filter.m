@@ -1,4 +1,4 @@
-function [eeg, emg] = morse_filter(srate,dataR_eeg, dataR_emg,num_freq,frex)
+function [eeg, emg, t, itpc] = morse_filter(srate,dataR_eeg, dataR_emg,num_freq,frex)
 
 %% Setup Parameters
 
@@ -20,8 +20,8 @@ A=sqrt(pi*g*2^r*exp(-gammaln(r)));
 %(number of frequencies by the length of the time vector)
 eeg = zeros(num_freq, length(dataR_eeg));
 emg = zeros(num_freq, length(dataR_eeg));
-%itpc = zeros(num_freq, length(dataR_eeg));
-
+t = zeros(num_freq, length(dataR_eeg));
+itpc = zeros(num_freq, length(dataR_eeg));
 % FFT for eeg and emg data
 dataX_eeg = fft(dataR_eeg);
 dataX_emg = fft(dataR_emg);
@@ -31,26 +31,28 @@ for i = 1:num_freq
     a = Wbg/(frex(i)*2*pi);
     y  = a*freq;             % shifted frequencies
     wa = (2*pi*y)';
-    %wa = [wa,zeros(1,length(dataR_eeg)/2-1)];
 
     % Normalisation factor for unit energy at each scale
     scale_fac=sqrt(srate*a);
 
     % Generate normalised, scaled wavelet (Olhede & Walden, 2002, P2666, (10), k=0)
-    awt = scale_fac*sqrt(2)*A*(wa.^b).*(exp(-wa.^g)); 
+    awt = scale_fac*A*(wa.^b).*(exp(-wa.^g)); 
     awt = [awt,zeros(1,length(dataR_eeg)/2-1)];
     
-    
-    
+ 
      % Convolve EEG
     eeg_as = ifft(dataX_eeg.*awt);
     eeg(i,:) = eeg(i,:) + eeg_as;
     % Convolve EMG
     emg_as = ifft(dataX_emg.*awt);
     emg(i,:) = emg(i,:) + emg_as;
+    
+    % COI
+    t(i,:) = sqrt(2)*a*(sqrt(b*g)/Wbg);
 
     % compute ITPC
-    %itpc(i,:) =  abs(mean(exp(1i*angle(eeg.*conj(emg)))));
+    %itpc(i,:) =  abs(mean(exp(1i*angle(eeg_as))));
+    itpc(i,:) = abs(mean(eeg_as))/mean(abs(eeg_as));
     
 end
 
