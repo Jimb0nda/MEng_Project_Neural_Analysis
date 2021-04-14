@@ -7,7 +7,7 @@ freq_all=[0:length(dataR_eeg)/2,-length(dataR_eeg)/2+1:-1]'*(srate/length(dataR_
 % Apply heaviside function, only positive frequencies, first (T/2)+1 pts.
 freq=freq_all(find(freq_all>=0));
 
-b = 9;
+b = 12;
 g = 3;
 
 Wbg = (b/g)^(1/g); % maximum value at the peak frequency
@@ -54,6 +54,7 @@ for i = 1:num_freq
     % compute ITPC
     itpc_eeg(i,:) =  exp(1i*angle(eeg_as));
     itpc_emg(i,:) =  exp(1i*angle(emg_as));
+    %itpc(i,:) = abs(mean(eeg_as))/mean(abs(eeg_as));
     
 end
 
